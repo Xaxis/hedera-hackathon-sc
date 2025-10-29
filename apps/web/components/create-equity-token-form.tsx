@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Coins, FileText, Shield, ExternalLink } from "lucide-react";
+import { Coins, FileText, Shield } from "lucide-react";
 
 interface EquityTokenForm {
   // Create Equity
@@ -35,14 +35,6 @@ interface EquityTokenForm {
   regulationType: string;
   regulationSubType: string;
   blockedCountries: string[];
-}
-
-interface CreatedToken extends EquityTokenForm {
-  id: string;
-  transactionHash: string;
-  tokenAddress: string;
-  evmTokenAddress: string;
-  createdAt: string;
 }
 
 const RIGHTS_OPTIONS = [
@@ -104,35 +96,6 @@ export function CreateEquityTokenForm() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [createdTokens, setCreatedTokens] = useState<CreatedToken[]>([]);
-  const [search, setSearch] = useState("");
-  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-
-  // Load any previously stored tokens from localStorage (client-only)
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("createdEquityTokens");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          console.log("Loaded tokens from localStorage:", parsed);
-          setCreatedTokens(parsed);
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to parse createdEquityTokens from localStorage", e);
-    }
-  }, []);
-
-  const filteredTokens = useMemo(() => {
-    if (!search.trim()) return createdTokens;
-    const q = search.toLowerCase();
-    return createdTokens.filter((t) =>
-      [t.tokenName, t.tokenSymbol, t.isin].some((field) =>
-        field.toLowerCase().includes(q)
-      )
-    );
-  }, [createdTokens, search]);
 
   const handleInputChange = (field: keyof EquityTokenForm, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -260,27 +223,8 @@ export function CreateEquityTokenForm() {
       console.log('📄 Token address:', tokenAddress);
       console.log('📄 Transaction hash:', transactionHash);
 
-      const newToken: CreatedToken = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-        transactionHash,
-        tokenAddress,
-        evmTokenAddress,
-        createdAt: new Date().toISOString(),
-        ...formData,
-      };
-
-      setCreatedTokens((prev) => {
-        const updated = [newToken, ...prev];
-        try {
-          localStorage.setItem("createdEquityTokens", JSON.stringify(updated));
-        } catch (e) {
-          console.warn("Failed to persist createdEquityTokens", e);
-        }
-        return updated;
-      });
-
       alert(
-        "Equity token created successfully! Transaction confirmed on blockchain."
+        `Equity token created successfully!\n\nToken Address: ${tokenAddress}\n\nYou can view it on HashScan: https://hashscan.io/testnet/contract/${tokenAddress}`
       );
 
       // Reset form
@@ -325,279 +269,6 @@ export function CreateEquityTokenForm() {
           </div>
         </div>
       </div>
-
-      {filteredTokens.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          {/* Header */}
-          <div className="p-6 border-b border-slate-100">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-emerald-100 rounded-xl">
-                <CheckCircle className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  Previous Equity Tokens
-                </h3>
-                <p className="text-sm text-slate-500">
-                  View and manage all previously created equity tokens
-                </p>
-              </div>
-            </div>
-
-            {/* Test Copy Button */}
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const testText = "0x1234567890abcdef1234567890abcdef12345678";
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                      await navigator.clipboard.writeText(testText);
-                      alert("Test copy successful! Check your clipboard.");
-                    } else {
-                      alert("Clipboard API not available");
-                    }
-                  } catch (error) {
-                    alert("Test copy failed: " + error);
-                  }
-                }}
-                className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-              >
-                Test Copy Function
-              </button>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-4 w-4 text-slate-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Search by token name, symbol, or ISIN..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50/50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Symbol
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    ISIN
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Address
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
-                {filteredTokens.map((token) => (
-                  <tr key={token.id} className="hover:bg-slate-50/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                        {token.tokenSymbol}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-slate-900">
-                        {token.tokenName}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-500">EQUITY</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-900">
-                        {token.isin}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-sm text-slate-900 font-mono"
-                          title={token.tokenAddress || token.evmTokenAddress || token.transactionHash}
-                        >
-                          {(token.tokenAddress || token.evmTokenAddress || token.transactionHash || '').slice(0, 6)}...
-                          {(token.tokenAddress || token.evmTokenAddress || token.transactionHash || '').slice(-4)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={async (event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-
-                            const addressToCopy = token.tokenAddress || token.evmTokenAddress || token.transactionHash;
-                            console.log("Attempting to copy:", addressToCopy);
-
-                            if (!addressToCopy) {
-                              console.error("No address to copy");
-                              alert("No address available to copy");
-                              return;
-                            }
-
-                            try {
-                              // Method 1: Try modern clipboard API
-                              if (navigator.clipboard && navigator.clipboard.writeText) {
-                                await navigator.clipboard.writeText(addressToCopy);
-                                console.log("✅ Copied using Clipboard API");
-                              } else {
-                                // Method 2: Fallback to textarea method
-                                const textArea = document.createElement('textarea');
-                                textArea.value = addressToCopy;
-                                textArea.style.position = 'absolute';
-                                textArea.style.left = '-9999px';
-                                textArea.style.top = '0';
-                                textArea.setAttribute('readonly', '');
-                                document.body.appendChild(textArea);
-
-                                // Select the text
-                                if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
-                                  // iOS specific
-                                  const range = document.createRange();
-                                  range.selectNodeContents(textArea);
-                                  const selection = window.getSelection();
-                                  selection?.removeAllRanges();
-                                  selection?.addRange(range);
-                                  textArea.setSelectionRange(0, 999999);
-                                } else {
-                                  textArea.select();
-                                }
-
-                                const successful = document.execCommand('copy');
-                                document.body.removeChild(textArea);
-
-                                if (!successful) {
-                                  throw new Error("execCommand failed");
-                                }
-                                console.log("✅ Copied using execCommand");
-                              }
-
-                              // Show success feedback
-                              setCopiedAddress(addressToCopy);
-                              setTimeout(() => setCopiedAddress(null), 2000);
-                              console.log("✅ Successfully copied address:", addressToCopy);
-
-                            } catch (error) {
-                              console.error("❌ All copy methods failed:", error);
-
-                              // Last resort: Create a prompt with the address
-                              const userCopied = window.prompt(
-                                "Automatic copy failed. Please copy this address manually (Ctrl+C or Cmd+C):",
-                                addressToCopy
-                              );
-
-                              if (userCopied !== null) {
-                                // User clicked OK, assume they copied it
-                                setCopiedAddress(addressToCopy);
-                                setTimeout(() => setCopiedAddress(null), 2000);
-                              }
-                            }
-                          }}
-                          className={`transition-colors ${
-                            copiedAddress === (token.tokenAddress || token.evmTokenAddress || token.transactionHash)
-                              ? "text-green-600"
-                              : "text-slate-400 hover:text-slate-600"
-                          }`}
-                          title={
-                            copiedAddress === (token.tokenAddress || token.evmTokenAddress || token.transactionHash)
-                              ? "Copied!"
-                              : "Copy address"
-                          }
-                        >
-                          {copiedAddress === (token.tokenAddress || token.evmTokenAddress || token.transactionHash) ? (
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          ) : (
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                              />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                        Active
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer */}
-          <div className="px-6 py-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-sm text-slate-500">
-              {filteredTokens.length} token
-              {filteredTokens.length !== 1 ? "s" : ""} found
-            </p>
-            {search && filteredTokens.length !== createdTokens.length && (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="text-xs text-emerald-600 hover:underline"
-              >
-                Clear filter
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-      {filteredTokens.length === 0 && createdTokens.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 bg-white">
-          No equity tokens created yet. Fill the form below to deploy your first
-          token.
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Create Equity Section */}
@@ -1042,113 +713,6 @@ export function CreateEquityTokenForm() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Created Tokens List */}
-      {createdTokens.length > 0 && (
-        <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-100 rounded-xl">
-                <CheckCircle className="h-5 w-5 text-emerald-600" />
-              </div>
-              <CardTitle className="text-lg font-semibold text-slate-900">
-                Created Equity Tokens ({createdTokens.length})
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {createdTokens.map((token) => (
-                <div
-                  key={token.id}
-                  className="p-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-slate-900">
-                          {token.tokenName}
-                        </h3>
-                        <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
-                          {token.tokenSymbol}
-                        </Badge>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <span className="text-slate-500">Token Address:</span>
-                          <div className="flex items-center gap-1 mt-1">
-                            <code className="text-xs bg-white px-2 py-1 rounded border border-slate-200 font-mono">
-                              {token.tokenAddress.slice(0, 10)}...{token.tokenAddress.slice(-8)}
-                            </code>
-                            <a
-                              href={`https://hashscan.io/testnet/contract/${token.tokenAddress}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 hover:text-emerald-700"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </div>
-                        </div>
-
-                        <div>
-                          <span className="text-slate-500">Transaction:</span>
-                          <div className="flex items-center gap-1 mt-1">
-                            <code className="text-xs bg-white px-2 py-1 rounded border border-slate-200 font-mono">
-                              {token.transactionHash.slice(0, 10)}...{token.transactionHash.slice(-8)}
-                            </code>
-                            <a
-                              href={`https://hashscan.io/testnet/transaction/${token.transactionHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 hover:text-emerald-700"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          </div>
-                        </div>
-
-                        <div>
-                          <span className="text-slate-500">Total Shares:</span>
-                          <p className="font-medium text-slate-900 mt-1">
-                            {Number(token.numberOfShares).toLocaleString()}
-                          </p>
-                        </div>
-
-                        <div>
-                          <span className="text-slate-500">Nominal Value:</span>
-                          <p className="font-medium text-slate-900 mt-1">
-                            {token.nominalValue} {token.currency}
-                          </p>
-                        </div>
-                      </div>
-
-                      {token.chosenRights.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {token.chosenRights.map((right) => (
-                            <Badge
-                              key={right}
-                              variant="outline"
-                              className="text-xs bg-white"
-                            >
-                              {right}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      <p className="text-xs text-slate-400 mt-2">
-                        Created {new Date(token.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

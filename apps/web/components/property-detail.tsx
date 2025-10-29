@@ -24,6 +24,7 @@ import {
   Share,
   Heart,
   X,
+  ExternalLink,
 } from "lucide-react";
 
 interface Property {
@@ -44,6 +45,9 @@ interface Property {
   pricePerShare?: number;
   lastDistribution?: string;
   nextDistribution?: string;
+  tokenAddress?: string;
+  saleContractAddress?: string;
+  dividendContractAddress?: string;
 }
 
 interface PropertyDetailProps {
@@ -432,6 +436,93 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Blockchain Contracts */}
+            {(property.tokenAddress || property.saleContractAddress || property.dividendContractAddress) && (
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-2xl overflow-hidden">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center text-slate-900 font-semibold">
+                    <FileText className="h-5 w-5 mr-2 text-slate-600" />
+                    Smart Contracts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-4">
+                    {property.tokenAddress && (
+                      <div className="p-4 bg-slate-50/80 hover:bg-slate-100/80 rounded-xl border border-slate-100 hover:border-slate-200 transition-all duration-200">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-slate-600 mb-2">
+                              Equity Token Contract
+                            </div>
+                            <code className="text-xs bg-white px-3 py-2 rounded border border-slate-200 font-mono block break-all">
+                              {property.tokenAddress}
+                            </code>
+                          </div>
+                          <a
+                            href={`https://hashscan.io/testnet/contract/${property.tokenAddress}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-shrink-0 text-emerald-600 hover:text-emerald-700 p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="View on HashScan"
+                          >
+                            <ExternalLink className="h-5 w-5" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {property.saleContractAddress && (
+                      <div className="p-4 bg-slate-50/80 hover:bg-slate-100/80 rounded-xl border border-slate-100 hover:border-slate-200 transition-all duration-200">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-slate-600 mb-2">
+                              PropertySale Contract
+                            </div>
+                            <code className="text-xs bg-white px-3 py-2 rounded border border-slate-200 font-mono block break-all">
+                              {property.saleContractAddress}
+                            </code>
+                          </div>
+                          <a
+                            href={`https://hashscan.io/testnet/contract/${property.saleContractAddress}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-shrink-0 text-emerald-600 hover:text-emerald-700 p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="View on HashScan"
+                          >
+                            <ExternalLink className="h-5 w-5" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {property.dividendContractAddress && (
+                      <div className="p-4 bg-slate-50/80 hover:bg-slate-100/80 rounded-xl border border-slate-100 hover:border-slate-200 transition-all duration-200">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-slate-600 mb-2">
+                              DividendDistributor Contract
+                            </div>
+                            <code className="text-xs bg-white px-3 py-2 rounded border border-slate-200 font-mono block break-all">
+                              {property.dividendContractAddress}
+                            </code>
+                          </div>
+                          <a
+                            href={`https://hashscan.io/testnet/contract/${property.dividendContractAddress}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-shrink-0 text-emerald-600 hover:text-emerald-700 p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="View on HashScan"
+                          >
+                            <ExternalLink className="h-5 w-5" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Ownership Breakdown */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-2xl overflow-hidden">

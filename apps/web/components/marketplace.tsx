@@ -874,7 +874,9 @@ export function Marketplace() {
                   title: property.name,
                   availableSupply: availablePercentage,
                   totalValue: totalValue,
+                  tokenAddress: property.tokenAddress,
                   saleContractAddress: property.saleContractAddress,
+                  dividendContractAddress: property.dividendContractAddress,
                   totalShares: property.totalShares,
                   pricePerShare: property.pricePerShare,
                 })}
@@ -890,7 +892,9 @@ export function Marketplace() {
                       title: property.name,
                       availableSupply: availablePercentage,
                       totalValue: totalValue,
+                      tokenAddress: property.tokenAddress,
                       saleContractAddress: property.saleContractAddress,
+                      dividendContractAddress: property.dividendContractAddress,
                       totalShares: property.totalShares,
                       pricePerShare: property.pricePerShare,
                     });

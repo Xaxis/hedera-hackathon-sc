@@ -32,19 +32,6 @@ interface PropertyFormData {
   tokenId: string
 }
 
-interface CreatedProperty {
-  id: string
-  title: string
-  location: string
-  type: string
-  tokenAddress: string
-  saleContractAddress: string
-  dividendContractAddress: string
-  totalShares: string
-  totalValue: string
-  createdAt: string
-}
-
 export function CreatePropertyForm() {
   const { user, wallet, isAuthenticated, connectWallet } = useAuth()
   const { isConnected: hederaConnected, connect: connectHederaWallet, error: hederaError } = useHederaWallet()
@@ -70,19 +57,6 @@ export function CreatePropertyForm() {
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [createdProperties, setCreatedProperties] = useState<CreatedProperty[]>([])
-
-  // Load created properties from localStorage on mount
-  useState(() => {
-    try {
-      const stored = localStorage.getItem('createdProperties')
-      if (stored) {
-        setCreatedProperties(JSON.parse(stored))
-      }
-    } catch (e) {
-      console.warn('Failed to load created properties', e)
-    }
-  })
 
   const handleInputChange = (field: keyof PropertyFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -272,30 +246,6 @@ export function CreatePropertyForm() {
       }
 
       const result = await response.json();
-
-      // Store the created property
-      const newProperty: CreatedProperty = {
-        id: result.property?.id || Date.now().toString(),
-        title: formData.title,
-        location: formData.location,
-        type: formData.type,
-        tokenAddress: tokenAddress,
-        saleContractAddress: saleAddress,
-        dividendContractAddress: dividendAddress,
-        totalShares: formData.totalShares,
-        totalValue: formData.totalValue,
-        createdAt: new Date().toISOString(),
-      }
-
-      setCreatedProperties((prev) => {
-        const updated = [newProperty, ...prev]
-        try {
-          localStorage.setItem('createdProperties', JSON.stringify(updated))
-        } catch (e) {
-          console.warn('Failed to persist created properties', e)
-        }
-        return updated
-      })
 
       setSubmitStatus("success")
       setIsSubmitting(false)
@@ -769,110 +719,6 @@ export function CreatePropertyForm() {
         </form>
       </CardContent>
     </Card>
-
-    {/* Created Properties List */}
-    {createdProperties.length > 0 && (
-      <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-xl">
-              <CheckCircle className="h-5 w-5 text-emerald-600" />
-            </div>
-            <CardTitle className="text-lg font-semibold text-slate-900">
-              Created Property Listings ({createdProperties.length})
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            {createdProperties.map((property) => (
-              <div
-                key={property.id}
-                className="p-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-lg">
-                        {property.title}
-                      </h3>
-                      <p className="text-sm text-slate-500 mt-1">
-                        {property.location} • {property.type}
-                      </p>
-                    </div>
-                    <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
-                      {Number(property.totalShares).toLocaleString()} shares
-                    </Badge>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-3">
-                    <div>
-                      <span className="text-xs text-slate-500 font-medium">Equity Token Address</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <code className="text-xs bg-white px-3 py-1.5 rounded border border-slate-200 font-mono flex-1">
-                          {property.tokenAddress}
-                        </code>
-                        <a
-                          href={`https://hashscan.io/testnet/contract/${property.tokenAddress}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-emerald-600 hover:text-emerald-700 p-1.5 hover:bg-emerald-50 rounded transition-colors"
-                          title="View on HashScan"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="text-xs text-slate-500 font-medium">PropertySale Contract</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <code className="text-xs bg-white px-3 py-1.5 rounded border border-slate-200 font-mono flex-1">
-                          {property.saleContractAddress}
-                        </code>
-                        <a
-                          href={`https://hashscan.io/testnet/contract/${property.saleContractAddress}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-emerald-600 hover:text-emerald-700 p-1.5 hover:bg-emerald-50 rounded transition-colors"
-                          title="View on HashScan"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="text-xs text-slate-500 font-medium">DividendDistributor Contract</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <code className="text-xs bg-white px-3 py-1.5 rounded border border-slate-200 font-mono flex-1">
-                          {property.dividendContractAddress}
-                        </code>
-                        <a
-                          href={`https://hashscan.io/testnet/contract/${property.dividendContractAddress}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-emerald-600 hover:text-emerald-700 p-1.5 hover:bg-emerald-50 rounded transition-colors"
-                          title="View on HashScan"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-slate-400 mt-3">
-                    Created {new Date(property.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    )}
     </div>
   )
 }
